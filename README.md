@@ -1,1 +1,1 @@
-# render_pipeline_cpp_ci
+# Continuous Integration for Render Pipeline C++
