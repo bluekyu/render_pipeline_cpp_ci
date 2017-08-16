@@ -9,6 +9,8 @@ if(panda3d_thirdparty_ENABLE_CI)
     if(panda3d_thirdparty_MANUAL_GIT)
         ExternalProject_Add(panda3d_thirdparty_git
             SOURCE_DIR ${panda3d_thirdparty_SOURCE_DIR}
+            CMAKE_CACHE_ARGS -Dbuild_minimal:BOOL=ON
+
             BINARY_DIR ${panda3d_thirdparty_BINARY_DIR}
             INSTALL_COMMAND ""
         )
@@ -19,6 +21,8 @@ if(panda3d_thirdparty_ENABLE_CI)
             GIT_PROGRESS 1
 
             SOURCE_DIR ${panda3d_thirdparty_SOURCE_DIR}
+            CMAKE_CACHE_ARGS -Dbuild_minimal:BOOL=ON
+
             BINARY_DIR ${panda3d_thirdparty_BINARY_DIR}
             INSTALL_COMMAND ""
         )

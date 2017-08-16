@@ -44,6 +44,8 @@ if(panda3d_ENABLE_CI)
             PATCH_COMMAND ${CMAKE_COMMAND} -E make_directory "${panda3d_SOURCE_DIR}/thirdparty"
                   COMMAND ${panda3d_PATCH_COMMAND}
             SOURCE_DIR ${panda3d_SOURCE_DIR}
+            CMAKE_CACHE_ARGS -Dpanda3d_build_minimal:BOOL=ON
+
             BINARY_DIR ${panda3d_BINARY_DIR}
             INSTALL_COMMAND ""
         )
@@ -57,6 +59,8 @@ if(panda3d_ENABLE_CI)
             PATCH_COMMAND ${CMAKE_COMMAND} -E make_directory "${panda3d_SOURCE_DIR}/thirdparty"
                   COMMAND ${panda3d_PATCH_COMMAND}
             SOURCE_DIR ${panda3d_SOURCE_DIR}
+            CMAKE_CACHE_ARGS -Dpanda3d_build_minimal:BOOL=ON
+
             BINARY_DIR ${panda3d_BINARY_DIR}
             INSTALL_COMMAND ""
         )
