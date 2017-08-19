@@ -23,9 +23,11 @@ SOFTWARE.
 """
 
 
+import pathlib
 import subprocess
 import argparse
 import sys
+import os
 from project_utils import *
 
 
@@ -38,7 +40,7 @@ def print_debug(msg):
     print("\x1b[32;1m", msg, "\x1b[0m", sep="")
 
 
-def build_project(cmake_generator, git_url, branch="master", cmake_args=[], ignore_cache=False):
+def build_project(git_url, cmake_generator, branch="master", cmake_args=[], ignore_cache=False):
     print_debug("-" * 79)
     print_debug("Project: {}".format(git_url))
 
@@ -85,6 +87,7 @@ if __name__ == "__main__":
         cmake_generator=args.cmake_generator,
         cmake_args=["-Dbuild_minimal:BOOL=ON"],
         ignore_cache=(not did_build))
+    os.environ["MAKEPANDA_THIRDPARTY"] = (pathlib.Path(INSTALLED_DIR).resolve() / "panda3d-thirdparty").as_posix()
 
     if args.target == TARGET_LIST[0]:
         sys.exit(0)

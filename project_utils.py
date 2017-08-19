@@ -30,13 +30,13 @@ import shutil
 import os
 
 
-GIT_EXE = "git"
-CMAKE_EXE = "cmake"
 BUILD_DIR = "_build"
 INSTALLED_DIR = "_install"
 
 
 class GitProject:
+    git_cmd = "git"
+
     def __init__(self, url, branch="master"):
         self.url = url
         self.branch = branch
@@ -47,7 +47,7 @@ class GitProject:
         try:
             return self.__hash
         except AttributeError:
-            result = subprocess.run([GIT_EXE, "ls-remote", self.url, self.branch],
+            result = subprocess.run([self.git_cmd, "ls-remote", self.url, self.branch],
                                     stdout=subprocess.PIPE, check=True).stdout.decode()
             match = re.search("^([0-9a-f]{40})\t", result)
             self.__hash = match.group(1)
@@ -55,7 +55,7 @@ class GitProject:
 
     def get_hash(self):
         self.exists(True)
-        return subprocess.run([GIT_EXE, "rev-parse", "HEAD"],
+        return subprocess.run([self.git_cmd, "rev-parse", "HEAD"],
                               stdout=subprocess.PIPE, cwd=self.name, check=True).stdout.decode()
 
     def create_hash_file(self):
@@ -76,7 +76,7 @@ class GitProject:
         return False
 
     def clone(self):
-        subprocess.run([GIT_EXE, "clone", "--branch", self.branch, self.url], check=True)
+        subprocess.run([self.git_cmd, "clone", "--branch", self.branch, self.url], check=True)
 
     def exists(self, strict=False):
         if (pathlib.Path(self.name) / ".git").exists():
@@ -87,6 +87,8 @@ class GitProject:
 
 
 class CMakeProject:
+    cmake_cmd = "cmake"
+
     def __init__(self, project_dir, config="Release"):
         self.config = config
 
@@ -98,7 +100,7 @@ class CMakeProject:
         binary_dir_path = pathlib.Path(self.binary_dir)
         if not binary_dir_path.exists():
             binary_dir_path.mkdir(parents=True)
-        subprocess.run([CMAKE_EXE, "-G", cmake_generator,
+        subprocess.run([self.cmake_cmd, "-G", cmake_generator,
                         "-DCMAKE_INSTALL_PREFIX="+self.install_prefix,
                         *additional_args,
                         self.source_dir],
@@ -106,13 +108,13 @@ class CMakeProject:
                        check=True)
 
     def build(self):
-        subprocess.run([CMAKE_EXE, "--build", ".", "--config", self.config,
+        subprocess.run([self.cmake_cmd, "--build", ".", "--config", self.config,
                         "--target", "ALL_BUILD"],
                        cwd=self.binary_dir,
                        check=True)
 
     def install(self):
-        subprocess.run([CMAKE_EXE, "--build", ".", "--config", self.config,
+        subprocess.run([self.cmake_cmd, "--build", ".", "--config", self.config,
                         "--target", "INSTALL"],
                        cwd=self.binary_dir,
                        check=True)
