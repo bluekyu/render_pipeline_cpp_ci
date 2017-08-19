@@ -31,7 +31,7 @@ from project_utils import *
 
 GIT_EXE = "git"
 CMAKE_EXE = "cmake"
-TARGET_LIST = ["panda3d-thirdparty", "panda3d"]
+TARGET_LIST = ["panda3d-thirdparty", "panda3d", "all"]
 
 
 def print_debug(msg):
@@ -48,9 +48,10 @@ def build_project(cmake_generator, git_url, branch="master", cmake_args=[], igno
         print_debug("-- cache is used")
         return False
     else:
-        print_debug("-- start git")
         git_repo.remove_hash_file()
-        git_repo.clone()
+        if not git_repo.exists():
+            print_debug("-- start git")
+            git_repo.clone()
 
         print_debug("-- start cmake")
         project = CMakeProject(git_repo.name)
@@ -89,7 +90,9 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # panda3d
-    did_build = did_build and not (args.target == TARGET_LIST[1])
+    if args.target == TARGET_LIST[1]:
+        did_build = False
+
     did_build = build_project(
         git_url="https://github.com/bluekyu/panda3d.git",
         branch="develop",

@@ -54,6 +54,7 @@ class GitProject:
             return self.__hash
 
     def get_hash(self):
+        self.exists(True)
         return subprocess.run([GIT_EXE, "rev-parse", "HEAD"],
                               stdout=subprocess.PIPE, cwd=self.name, check=True).stdout.decode()
 
@@ -76,6 +77,13 @@ class GitProject:
 
     def clone(self):
         subprocess.run([GIT_EXE, "clone", "--branch", self.branch, self.url], check=True)
+
+    def exists(self, strict=False):
+        if (pathlib.Path(self.name) / ".git").exists():
+            return True
+        if strict:
+            raise RuntimeError("Git directory does NOT exist.")
+        return False
 
 
 class CMakeProject:
