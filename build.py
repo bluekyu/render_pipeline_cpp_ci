@@ -77,6 +77,13 @@ if __name__ == "__main__":
     subprocess.run([GIT_EXE, "--version"], check=True)
     subprocess.run([CMAKE_EXE, "--version"], check=True)
 
+    # debug cache diretory
+    install_path = pathlib.Path(INSTALLED_DIR)
+    if install_path.exists():
+        print_debug("-- Listring '{}' directory".format(str(install_path)))
+        for cache_files in install_path.iterdir():
+            print_debug(str(cache_files))
+
     did_build = True
 
     # panda3d-thirdparty
@@ -87,7 +94,8 @@ if __name__ == "__main__":
         cmake_generator=args.cmake_generator,
         cmake_args=["-Dbuild_minimal:BOOL=ON"],
         ignore_cache=(not did_build))
-    os.environ["MAKEPANDA_THIRDPARTY"] = (pathlib.Path(INSTALLED_DIR).resolve() / "panda3d-thirdparty").as_posix()
+
+    os.environ["MAKEPANDA_THIRDPARTY"] = (install_path.resolve() / "panda3d-thirdparty").as_posix()
 
     if args.target == TARGET_LIST[0]:
         sys.exit(0)
@@ -102,6 +110,10 @@ if __name__ == "__main__":
         cmake_generator=args.cmake_generator,
         cmake_args=["-Dpanda3d_build_minimal:BOOL=ON"],
         ignore_cache=(not did_build))
+
+    # reduce the size of cache
+    for pdb_path in (install_path / "panda3d" / "bin").glob("*.pdb"):
+        os.remove(pdb_path.as_posix())
 
     if args.target == TARGET_LIST[1]:
         sys.exit(0)
