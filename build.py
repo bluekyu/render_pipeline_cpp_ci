@@ -40,11 +40,14 @@ def print_debug(msg):
     print("\x1b[32;1m", msg, "\x1b[0m", sep="", flush=True)
 
 
-def build_project(git_url, cmake_generator, branch="master", cmake_args=[], ignore_cache=False):
+def build_project(git_url, cmake_generator, install_path, branch="master", cmake_args=[], ignore_cache=False):
     print_debug("-" * 79)
     print_debug("Project: {}".format(git_url))
 
+    install_path = pathlib.Path(install_path).absolute()
+
     git_repo = GitProject(git_url, branch)
+    git_repo.set_hash_file_path(install_path / (git_repo.name + ".hash"))
 
     if (not ignore_cache) and git_repo.check_cache():
         print_debug("-- cache is used")
@@ -56,7 +59,7 @@ def build_project(git_url, cmake_generator, branch="master", cmake_args=[], igno
             git_repo.clone()
 
         print_debug("-- start cmake")
-        project = CMakeProject(git_repo.name)
+        project = CMakeProject(git_repo.name, install_prefix=install_path / git_repo.name)
         project.remove_install()
 
         project.generate(cmake_generator, cmake_args)
@@ -71,16 +74,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("target", choices=TARGET_LIST, type=str)
     parser.add_argument("--cmake-generator", type=str, required=True)
+    parser.add_argument("--install-prefix", type=str, required=True)
 
     args = parser.parse_args()
 
     subprocess.run([GIT_EXE, "--version"], check=True)
     subprocess.run([CMAKE_EXE, "--version"], check=True)
 
+    install_path = pathlib.Path(args.install_prefix).absolute()
+
     # debug cache diretory
-    install_path = pathlib.Path(INSTALLED_DIR)
     if install_path.exists():
-        print_debug("-- Listring '{}' directory".format(str(install_path)))
+        print_debug("-- Listring install directory")
         for cache_files in install_path.iterdir():
             print_debug(str(cache_files))
 
@@ -91,11 +96,12 @@ if __name__ == "__main__":
     did_build = build_project(
         git_url="https://github.com/bluekyu/panda3d-thirdparty.git",
         branch="develop",
+        install_path=install_path,
         cmake_generator=args.cmake_generator,
         cmake_args=["-Dbuild_minimal:BOOL=ON"],
         ignore_cache=(not did_build))
 
-    os.environ["MAKEPANDA_THIRDPARTY"] = (install_path.resolve() / "panda3d-thirdparty").as_posix()
+    os.environ["MAKEPANDA_THIRDPARTY"] = (install_path / "panda3d-thirdparty").as_posix()
 
     if args.target == TARGET_LIST[0]:
         sys.exit(0)
@@ -108,6 +114,7 @@ if __name__ == "__main__":
         git_url="https://github.com/bluekyu/panda3d.git",
         branch="develop",
         cmake_generator=args.cmake_generator,
+        install_path=install_path,
         cmake_args=["-Dpanda3d_build_minimal:BOOL=ON"],
         ignore_cache=(not did_build))
 

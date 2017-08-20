@@ -31,7 +31,6 @@ import os
 
 
 BUILD_DIR = "_build"
-INSTALLED_DIR = "_install"
 
 
 class GitProject:
@@ -41,7 +40,9 @@ class GitProject:
         self.url = url
         self.branch = branch
         self.name = re.search("^.*/(.*?)\.git$", self.url).group(1)
-        self.hash_file_path = pathlib.Path(INSTALLED_DIR) / (self.name + ".hash")
+
+    def set_hash_file_path(self, hash_file_path):
+        self.hash_file_path = pathlib.Path(hash_file_path)
 
     def get_remote_hash(self):
         try:
@@ -89,12 +90,12 @@ class GitProject:
 class CMakeProject:
     cmake_cmd = "cmake"
 
-    def __init__(self, project_dir, config="Release"):
+    def __init__(self, project_dir, install_prefix, config="Release"):
         self.config = config
 
-        self.source_dir = pathlib.Path(project_dir).resolve().as_posix()
+        self.source_dir = pathlib.Path(project_dir).resolve(True).as_posix()
         self.binary_dir = (pathlib.Path.cwd() / BUILD_DIR / project_dir).as_posix()
-        self.install_prefix = (pathlib.Path.cwd() / INSTALLED_DIR / project_dir).as_posix()
+        self.install_prefix = pathlib.Path(install_prefix).absolute().as_posix()
 
     def generate(self, cmake_generator, additional_args=[]):
         binary_dir_path = pathlib.Path(self.binary_dir)
