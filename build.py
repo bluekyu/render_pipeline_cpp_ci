@@ -75,11 +75,7 @@ if __name__ == "__main__":
     parser.add_argument("target", choices=TARGET_LIST, type=str)
     parser.add_argument("--cmake-generator", type=str, required=True)
     parser.add_argument("--install-prefix", type=str, required=True)
-
     args = parser.parse_args()
-
-    subprocess.run([GIT_EXE, "--version"], check=True)
-    subprocess.run([CMAKE_EXE, "--version"], check=True)
 
     install_path = pathlib.Path(args.install_prefix).absolute()
 
@@ -121,6 +117,10 @@ if __name__ == "__main__":
     # reduce the size of cache
     for pdb_path in (install_path / "panda3d" / "bin").glob("*.pdb"):
         os.remove(pdb_path.as_posix())
+    import_libs = [f.stem for f in (install_path / "panda3d" / "lib").glob("*.exp")]
+    for lib_path in (install_path / "panda3d" / "lib").glob("*.lib"):
+        if lib_path.stem not in import_libs:
+            os.remove(lib_path.as_posix())
 
     if args.target == TARGET_LIST[1]:
         sys.exit(0)
