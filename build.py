@@ -37,7 +37,7 @@ TARGET_LIST = ["panda3d-thirdparty", "panda3d", "all"]
 
 
 def print_debug(msg):
-    print("\x1b[32;1m", msg, "\x1b[0m", sep="")
+    print("\x1b[32;1m", msg, "\x1b[0m", sep="", flush=True)
 
 
 def build_project(git_url, cmake_generator, branch="master", cmake_args=[], ignore_cache=False):
