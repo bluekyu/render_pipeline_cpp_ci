@@ -93,7 +93,7 @@ class CMakeProject:
     def __init__(self, project_dir, install_prefix, config="Release"):
         self.config = config
 
-        self.source_dir = pathlib.Path(project_dir).resolve(True).as_posix()
+        self.source_dir = pathlib.Path(project_dir).absolute().as_posix()
         self.binary_dir = (pathlib.Path.cwd() / BUILD_DIR / project_dir).as_posix()
         self.install_prefix = pathlib.Path(install_prefix).absolute().as_posix()
 

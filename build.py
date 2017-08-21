@@ -50,7 +50,7 @@ def build_project(git_url, cmake_generator, install_path, branch="master", cmake
     git_repo.set_hash_file_path(install_path / (git_repo.name + ".hash"))
 
     if (not ignore_cache) and git_repo.check_cache():
-        print_debug("-- cache is used")
+        print_debug("-- cache is up to date")
         return False
     else:
         git_repo.remove_hash_file()
