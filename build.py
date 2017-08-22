@@ -128,7 +128,15 @@ def main(args):
         cmake_generator=args.cmake_generator,
         install_path=install_path,
         cmake_args=["-DBOOST_ROOT:PATH=C:/Libraries/boost_1_64_0"],
-        ignore_cache=did_build)
+        ignore_cache=False) or did_build
+
+    # spdlog
+    did_build = build_project(
+        git_url="https://github.com/gabime/spdlog.git",
+        branch="v0.13.0",
+        cmake_generator=args.cmake_generator,
+        install_path=install_path,
+        ignore_cache=False) or did_build
 
     # render_pipeline_cpp
     if args.target == TARGET_LIST[2]:
@@ -158,5 +166,5 @@ if __name__ == "__main__":
                     total_size += os.path.getsize(f.path)
         return total_size
 
-    print_debug("Cache size: {} MiB".format(
+    print_debug("Cache size: {:.3f} MiB".format(
         scan_directory_size(pathlib.Path(args.install_prefix)) / 1024 / 1024))
