@@ -72,13 +72,7 @@ def build_project(git_url, cmake_generator, install_path, branch="master", cmake
         return True
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("target", choices=TARGET_LIST, type=str)
-    parser.add_argument("--cmake-generator", type=str, required=True)
-    parser.add_argument("--install-prefix", type=str, required=True)
-    args = parser.parse_args()
-
+def main(args):
     install_path = pathlib.Path(args.install_prefix).absolute()
 
     # debug cache diretory
@@ -104,7 +98,7 @@ if __name__ == "__main__":
     os.environ["MAKEPANDA_THIRDPARTY"] = (install_path / "panda3d-thirdparty").as_posix()
 
     if args.target == TARGET_LIST[0]:
-        sys.exit(0)
+        return
 
     # panda3d
     if args.target == TARGET_LIST[1]:
@@ -127,7 +121,7 @@ if __name__ == "__main__":
             os.remove(lib_path.as_posix())
 
     if args.target == TARGET_LIST[1]:
-        sys.exit(0)
+        return
 
     # YAML-CPP
     did_build = build_project(
@@ -143,4 +137,17 @@ if __name__ == "__main__":
         did_build = True
 
     if args.target == TARGET_LIST[2]:
-        sys.exit(0)
+        return
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("target", choices=TARGET_LIST, type=str)
+    parser.add_argument("--cmake-generator", type=str, required=True)
+    parser.add_argument("--install-prefix", type=str, required=True)
+    args = parser.parse_args()
+
+    main(args)
+
+    # cache size
+    print_debug("Cache size: {} MiB".format(pathlib.Path(args.install_prefix).stat().st_size / 1024 / 1024))
