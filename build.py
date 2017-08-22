@@ -33,7 +33,7 @@ from project_utils import *
 
 GIT_EXE = "git"
 CMAKE_EXE = "cmake"
-TARGET_LIST = ["panda3d-thirdparty", "panda3d", "all"]
+TARGET_LIST = ["panda3d-thirdparty", "panda3d", "render_pipeline_cpp", "all"]
 
 
 def print_debug(msg):
@@ -125,4 +125,20 @@ if __name__ == "__main__":
             os.remove(lib_path.as_posix())
 
     if args.target == TARGET_LIST[1]:
+        sys.exit(0)
+
+    # YAML-CPP
+    did_build = build_project(
+        git_url="https://github.com/jbeder/yaml-cpp.git",
+        branch="yaml-cpp-0.5.3",
+        cmake_generator=args.cmake_generator,
+        install_path=install_path,
+        cmake_args=["-DBOOST_ROOT:PATH=C:/Libraries/boost_1_64_0"],
+        ignore_cache=(not did_build))
+
+    # render_pipeline_cpp
+    if args.target == TARGET_LIST[2]:
+        did_build = False
+
+    if args.target == TARGET_LIST[2]:
         sys.exit(0)
