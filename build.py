@@ -62,6 +62,8 @@ def build_project(git_url, cmake_generator, install_path, branch="master", cmake
         project = CMakeProject(git_repo.name, install_prefix=install_path / git_repo.name)
         project.remove_install()
 
+        print_debug("---- source directory: {}".format(project.source_dir))
+        print_debug("---- binary directory: {}".format(project.binary_dir))
         project.generate(cmake_generator, cmake_args)
         project.install()
 
