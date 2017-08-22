@@ -24,9 +24,7 @@ SOFTWARE.
 
 
 import pathlib
-import subprocess
 import argparse
-import sys
 import os
 from project_utils import *
 
@@ -150,4 +148,15 @@ if __name__ == "__main__":
     main(args)
 
     # cache size
-    print_debug("Cache size: {} MiB".format(pathlib.Path(args.install_prefix).stat().st_size / 1024 / 1024))
+    def scan_directory_size(directory):
+        total_size = 0
+        with os.scandir(directory) as it:
+            for f in it:
+                if f.is_dir():
+                    total_size += scan_directory_size(f.path)
+                elif f.is_file():
+                    total_size += os.path.getsize(f.path)
+        return total_size
+
+    print_debug("Cache size: {} MiB".format(
+        scan_directory_size(pathlib.Path(args.install_prefix)) / 1024 / 1024))
