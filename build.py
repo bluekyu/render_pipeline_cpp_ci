@@ -147,6 +147,14 @@ def main(args):
         install_path=install_path,
         ignore_cache=False) or did_build
 
+    # flatbuffers
+    did_build = build_project(
+        git_url="https://github.com/google/flatbuffers.git",
+        branch="v1.7.1",
+        cmake_generator=args.cmake_generator,
+        install_path=install_path,
+        ignore_cache=False) or did_build
+
     # render_pipeline_cpp
     if args.target == TARGET_LIST[2]:
         did_build = True
