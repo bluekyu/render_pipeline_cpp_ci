@@ -62,10 +62,14 @@ class GitProject:
     def create_hash_file(self):
         with self.hash_file_path.open("w") as hash_file:
             hash_file.write(self.get_hash())
+            return True
+        return False
 
     def remove_hash_file(self):
         if self.hash_file_path.exists():
             os.remove(self.hash_file_path.as_posix())
+            return True
+        return False
 
     def check_cache(self):
         if self.hash_file_path.exists():
@@ -123,3 +127,5 @@ class CMakeProject:
     def remove_install(self):
         if pathlib.Path(self.install_prefix).exists():
             shutil.rmtree(self.install_prefix)
+            return True
+        return False

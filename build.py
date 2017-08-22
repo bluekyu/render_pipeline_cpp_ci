@@ -38,6 +38,10 @@ def print_debug(msg):
     print("\x1b[32;1m", msg, "\x1b[0m", sep="", flush=True)
 
 
+def print_error(msg):
+    print("\x1b[31;1m", msg, "\x1b[0m", sep="", flush=True)
+
+
 def build_project(git_url, cmake_generator, install_path, branch="master", cmake_args=[], ignore_cache=False):
     print_debug("-" * 79)
     print_debug("Project: {}".format(git_url))
@@ -51,22 +55,27 @@ def build_project(git_url, cmake_generator, install_path, branch="master", cmake
         print_debug("-- cache is up to date")
         return False
     else:
-        git_repo.remove_hash_file()
+        if not git_repo.remove_hash_file():
+            print_error("-- cannot remove hash file")
+
         if not git_repo.exists():
             print_debug("-- start git")
             git_repo.clone()
 
         print_debug("-- start cmake")
-        project = CMakeProject(git_repo.name, install_prefix=install_path / git_repo.name)
-        project.remove_install()
+        project = CMakeProject(git_repo.name, install_prefix=(install_path / git_repo.name))
+        if not project.remove_install():
+            print_error("-- cannot remove installed files")
 
         print_debug("---- source directory: {}".format(project.source_dir))
         print_debug("---- binary directory: {}".format(project.binary_dir))
         project.generate(cmake_generator, cmake_args)
         project.install()
 
-        git_repo.create_hash_file()
-        print_debug("-- hash file is created")
+        if git_repo.create_hash_file():
+            print_debug("-- hash file is created")
+        else:
+            print_error("-- Failed to create hash file")
         return True
 
 
