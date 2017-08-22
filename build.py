@@ -87,17 +87,19 @@ if __name__ == "__main__":
         for cache_files in install_path.iterdir():
             print_debug(str(cache_files))
 
-    did_build = True
+    did_build = False
 
     # panda3d-thirdparty
-    did_build = did_build and not (args.target == TARGET_LIST[0])
+    if args.target == TARGET_LIST[1]:
+        did_build = True
+
     did_build = build_project(
         git_url="https://github.com/bluekyu/panda3d-thirdparty.git",
         branch="develop",
         install_path=install_path,
         cmake_generator=args.cmake_generator,
         cmake_args=["-Dbuild_minimal:BOOL=ON"],
-        ignore_cache=(not did_build))
+        ignore_cache=did_build)
 
     os.environ["MAKEPANDA_THIRDPARTY"] = (install_path / "panda3d-thirdparty").as_posix()
 
@@ -106,7 +108,7 @@ if __name__ == "__main__":
 
     # panda3d
     if args.target == TARGET_LIST[1]:
-        did_build = False
+        did_build = True
 
     did_build = build_project(
         git_url="https://github.com/bluekyu/panda3d.git",
@@ -114,7 +116,7 @@ if __name__ == "__main__":
         cmake_generator=args.cmake_generator,
         install_path=install_path,
         cmake_args=["-Dpanda3d_build_minimal:BOOL=ON"],
-        ignore_cache=(not did_build))
+        ignore_cache=did_build)
 
     # reduce the size of cache
     for pdb_path in (install_path / "panda3d" / "bin").glob("*.pdb"):
@@ -134,11 +136,11 @@ if __name__ == "__main__":
         cmake_generator=args.cmake_generator,
         install_path=install_path,
         cmake_args=["-DBOOST_ROOT:PATH=C:/Libraries/boost_1_64_0"],
-        ignore_cache=(not did_build))
+        ignore_cache=did_build)
 
     # render_pipeline_cpp
     if args.target == TARGET_LIST[2]:
-        did_build = False
+        did_build = True
 
     if args.target == TARGET_LIST[2]:
         sys.exit(0)
