@@ -44,13 +44,31 @@ class GitProject:
     def set_hash_file_path(self, hash_file_path):
         self.hash_file_path = pathlib.Path(hash_file_path)
 
+    def ls_remote(self):
+        result = subprocess.run([self.git_cmd, "ls-remote", "--heads", "--tags", self.url],
+                                stdout=subprocess.PIPE, check=True).stdout.decode()
+        result = result.strip("\n")
+        result = result.split("\n")
+        ref_dict = {}
+        for s in result:
+            sha1, refs = s.split("\t")
+            match = re.match("^refs/(\\w+?)/(.+)$", refs)
+            ref_dict.setdefault(match.group(1), {})[match.group(2)] = sha1
+        return ref_dict
+
     def get_remote_hash(self, point=None):
         if not point:
             point = self.branch
-        result = subprocess.run([self.git_cmd, "ls-remote", self.url, point],
-                                stdout=subprocess.PIPE, check=True).stdout.decode()
-        match = re.search("^([0-9a-f]{40})\t", result)
-        return match.group(1)
+
+        ref_dict = self.ls_remote()
+        if point in ref_dict["heads"]:
+            return ref_dict["heads"][point]
+        elif (point+"^{}") in ref_dict["tags"]:
+            # first, dereference the tag
+            return ref_dict["tags"][point+"^{}"]
+        elif point in ref_dict["tags"]:
+            return ref_dict["tags"][point]
+        return None
 
     def get_hash(self, point="HEAD"):
         self.exists(True)
@@ -71,7 +89,7 @@ class GitProject:
         if self.hash_file_path.exists():
             with self.hash_file_path.open() as hash_file:
                 return hash_file.readline().strip()
-        return "0" * 41
+        return None
 
     def clone(self, point=None):
         if not point:
