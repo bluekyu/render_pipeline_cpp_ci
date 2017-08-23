@@ -26,12 +26,14 @@ SOFTWARE.
 import pathlib
 import argparse
 import os
-from project_utils import *
+import project_utils
 
 
-GIT_EXE = "git"
-CMAKE_EXE = "cmake"
-TARGET_LIST = ["panda3d-thirdparty", "panda3d", "render_pipeline_cpp", "all"]
+# custom settings
+BOOST_ROOT = ""
+
+# internal variables
+__TARGET_LIST = ["panda3d-thirdparty", "panda3d", "render_pipeline_cpp", "all"]
 
 
 def print_debug(msg):
@@ -48,7 +50,7 @@ def build_project(git_url, cmake_generator, install_path, branch="master", cmake
 
     install_path = pathlib.Path(install_path).absolute()
 
-    git_repo = GitProject(git_url, branch)
+    git_repo = project_utils.GitProject(git_url, branch)
     git_repo.set_hash_file_path(install_path / (git_repo.name + ".hash"))
 
     if not ignore_cache:
@@ -68,7 +70,7 @@ def build_project(git_url, cmake_generator, install_path, branch="master", cmake
         git_repo.clone()
 
     print_debug("-- start cmake")
-    project = CMakeProject(git_repo.name, install_prefix=(install_path / git_repo.name))
+    project = project_utils.CMakeProject(git_repo.name, install_prefix=(install_path / git_repo.name))
     project.remove_install()
 
     print_debug("---- source directory: {}".format(project.source_dir))
@@ -95,7 +97,7 @@ def main(args):
     did_build = False
 
     # panda3d-thirdparty
-    if args.target == TARGET_LIST[1]:
+    if args.target == __TARGET_LIST[1]:
         did_build = True
 
     did_build = build_project(
@@ -108,11 +110,11 @@ def main(args):
 
     os.environ["MAKEPANDA_THIRDPARTY"] = (install_path / "panda3d-thirdparty").as_posix()
 
-    if args.target == TARGET_LIST[0]:
+    if args.target == __TARGET_LIST[0]:
         return
 
     # panda3d
-    if args.target == TARGET_LIST[1]:
+    if args.target == __TARGET_LIST[1]:
         did_build = True
 
     did_build = build_project(
@@ -131,7 +133,7 @@ def main(args):
         if lib_path.stem not in import_libs:
             os.remove(lib_path.as_posix())
 
-    if args.target == TARGET_LIST[1]:
+    if args.target == __TARGET_LIST[1]:
         return
 
     # YAML-CPP
@@ -140,7 +142,7 @@ def main(args):
         branch="yaml-cpp-0.5.3",
         cmake_generator=args.cmake_generator,
         install_path=install_path,
-        cmake_args=["-DBOOST_ROOT:PATH=C:/Libraries/boost_1_64_0"],
+        cmake_args=["-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else ""],
         ignore_cache=False) or did_build
 
     # spdlog
@@ -160,16 +162,16 @@ def main(args):
         ignore_cache=False) or did_build
 
     # render_pipeline_cpp
-    if args.target == TARGET_LIST[2]:
+    if args.target == __TARGET_LIST[2]:
         did_build = True
 
-    if args.target == TARGET_LIST[2]:
+    if args.target == __TARGET_LIST[2]:
         return
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("target", choices=TARGET_LIST, type=str)
+    parser.add_argument("target", choices=__TARGET_LIST, type=str)
     parser.add_argument("--cmake-generator", type=str, required=True)
     parser.add_argument("--install-prefix", type=str, required=True)
     args = parser.parse_args()

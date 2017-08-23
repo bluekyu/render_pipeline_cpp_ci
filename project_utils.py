@@ -30,9 +30,6 @@ import shutil
 import os
 
 
-BUILD_DIR = "_build"
-
-
 class GitProject:
     git_cmd = "git"
 
@@ -107,11 +104,12 @@ class GitProject:
 class CMakeProject:
     cmake_cmd = "cmake"
 
-    def __init__(self, project_dir, install_prefix, config="Release"):
+    def __init__(self, source_dir, install_prefix, config="Release", binary_dir="_build"):
         self.config = config
 
-        self.source_dir = pathlib.Path(project_dir).absolute().as_posix()
-        self.binary_dir = (pathlib.Path.cwd() / BUILD_DIR / project_dir).as_posix()
+        source_dir = pathlib.Path(source_dir).absolute()
+        self.source_dir = source_dir.as_posix()
+        self.binary_dir = (pathlib.Path(binary_dir).absolute() / source_dir.name).as_posix()
         self.install_prefix = pathlib.Path(install_prefix).absolute().as_posix()
 
     def generate(self, cmake_generator, additional_args=[]):
