@@ -33,7 +33,7 @@ import project_utils
 BOOST_ROOT = ""
 
 # internal variables
-__TARGET_LIST = ["panda3d-thirdparty", "panda3d", "render_pipeline_cpp", "all"]
+__TARGET_LIST = ["panda3d-thirdparty", "panda3d", "render_pipeline_cpp", "rpcpp_plugins", "all"]
 
 
 def print_debug(msg):
@@ -142,7 +142,6 @@ def main(args):
         branch="master",
         cmake_generator=args.cmake_generator,
         install_path=install_path,
-        cmake_args=["-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else ""],
         ignore_cache=False) or did_build
 
     # spdlog
@@ -171,12 +170,28 @@ def main(args):
         cmake_generator=args.cmake_generator,
         install_path=install_path,
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
+                    "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
                     "-Dpanda3d_ROOT:PATH={}".format((install_path / "panda3d").as_posix()),
                     "-Dyaml-cpp_DIR:PATH={}".format((install_path / "yaml-cpp" / "CMake").as_posix()),
                     "-DFlatBuffers_ROOT:PATH={}".format((install_path / "flatbuffers").as_posix())],
         ignore_cache=did_build)
 
     if args.target == __TARGET_LIST[2]:
+        return
+
+    # rpcpp_plugins
+    did_build = build_project(
+        git_url="https://github.com/bluekyu/rpcpp_plugins",
+        branch="master",
+        cmake_generator=args.cmake_generator,
+        install_path=install_path,
+        cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
+                    "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
+                    "-Dpanda3d_ROOT:PATH={}".format((install_path / "panda3d").as_posix()),
+                    "-Drpcpp_plugins_BUILD_background2d:BOOL=ON"],
+        ignore_cache=did_build)
+
+    if args.target == __TARGET_LIST[3]:
         return
 
 
