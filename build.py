@@ -51,32 +51,36 @@ def build_project(git_url, cmake_generator, install_path, branch="master", cmake
     git_repo = GitProject(git_url, branch)
     git_repo.set_hash_file_path(install_path / (git_repo.name + ".hash"))
 
-    if (not ignore_cache) and git_repo.check_cache():
-        print_debug("-- cache is up to date")
-        return False
-    else:
-        if not git_repo.remove_hash_file():
-            print_error("-- cannot remove hash file")
+    if not ignore_cache:
+        repo_cache_hash = git_repo.get_cache_hash()
+        repo_hash = git_repo.get_hash() if git_repo.exists() else git_repo.get_remote_hash()
 
-        if not git_repo.exists():
-            print_debug("-- start git")
-            git_repo.clone()
-
-        print_debug("-- start cmake")
-        project = CMakeProject(git_repo.name, install_prefix=(install_path / git_repo.name))
-        if not project.remove_install():
-            print_error("-- cannot remove installed files")
-
-        print_debug("---- source directory: {}".format(project.source_dir))
-        print_debug("---- binary directory: {}".format(project.binary_dir))
-        project.generate(cmake_generator, cmake_args)
-        project.install()
-
-        if git_repo.create_hash_file():
-            print_debug("-- hash file is created")
+        if repo_hash == repo_cache_hash:
+            print_debug("-- cache is up to date")
+            return False
         else:
-            print_error("-- Failed to create hash file")
-        return True
+            print_debug("-- repository was updated to {} from {}".format(repo_hash, repo_cache_hash))
+
+    git_repo.remove_hash_file()
+
+    if not git_repo.exists():
+        print_debug("-- start git")
+        git_repo.clone()
+
+    print_debug("-- start cmake")
+    project = CMakeProject(git_repo.name, install_prefix=(install_path / git_repo.name))
+    project.remove_install()
+
+    print_debug("---- source directory: {}".format(project.source_dir))
+    print_debug("---- binary directory: {}".format(project.binary_dir))
+    project.generate(cmake_generator, cmake_args)
+    project.install()
+
+    if git_repo.create_hash_file():
+        print_debug("-- hash file is created")
+    else:
+        print_error("-- Failed to create hash file")
+    return True
 
 
 def main(args):

@@ -44,19 +44,17 @@ class GitProject:
     def set_hash_file_path(self, hash_file_path):
         self.hash_file_path = pathlib.Path(hash_file_path)
 
-    def get_remote_hash(self):
-        try:
-            return self.__hash
-        except AttributeError:
-            result = subprocess.run([self.git_cmd, "ls-remote", self.url, self.branch],
-                                    stdout=subprocess.PIPE, check=True).stdout.decode()
-            match = re.search("^([0-9a-f]{40})\t", result)
-            self.__hash = match.group(1)
-            return self.__hash
+    def get_remote_hash(self, point=None):
+        if not point:
+            point = self.branch
+        result = subprocess.run([self.git_cmd, "ls-remote", self.url, point],
+                                stdout=subprocess.PIPE, check=True).stdout.decode()
+        match = re.search("^([0-9a-f]{40})\t", result)
+        return match.group(1)
 
-    def get_hash(self):
+    def get_hash(self, point="HEAD"):
         self.exists(True)
-        return subprocess.run([self.git_cmd, "rev-parse", "HEAD"],
+        return subprocess.run([self.git_cmd, "rev-parse", point],
                               stdout=subprocess.PIPE, cwd=self.name, check=True).stdout.decode()
 
     def create_hash_file(self):
@@ -68,20 +66,17 @@ class GitProject:
     def remove_hash_file(self):
         if self.hash_file_path.exists():
             os.remove(self.hash_file_path.as_posix())
-            return True
-        return False
 
-    def check_cache(self):
+    def get_cache_hash(self):
         if self.hash_file_path.exists():
             with self.hash_file_path.open() as hash_file:
-                cache_hash = hash_file.readline().strip()
-                latest_hash = self.get_remote_hash()
-                if cache_hash == latest_hash:
-                    return True
-        return False
+                return hash_file.readline().strip()
+        return "0" * 41
 
-    def clone(self):
-        subprocess.run([self.git_cmd, "clone", "--branch", self.branch, self.url], check=True)
+    def clone(self, point=None):
+        if not point:
+            point = self.branch
+        subprocess.run([self.git_cmd, "clone", "--branch", point, self.url], check=True)
 
     def exists(self, strict=False):
         if (pathlib.Path(self.name) / ".git").exists():
@@ -127,5 +122,3 @@ class CMakeProject:
     def remove_install(self):
         if pathlib.Path(self.install_prefix).exists():
             shutil.rmtree(self.install_prefix)
-            return True
-        return False
