@@ -170,7 +170,7 @@ def main(args):
         branch="master",
         cmake_generator=args.cmake_generator,
         install_path=install_path,
-        cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON"
+        cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
                     "-Dpanda3d_ROOT:PATH={}".format((install_path / "panda3d").as_posix()),
                     "-Dyaml-cpp_DIR:PATH={}".format((install_path / "yaml-cpp" / "CMake").as_posix()),
                     "-DFlatBuffers_ROOT:PATH={}".format((install_path / "flatbuffers").as_posix())],
