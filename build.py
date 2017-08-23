@@ -134,7 +134,7 @@ def main(args):
         if lib_path.stem not in import_libs:
             os.remove(lib_path.as_posix())
 
-    panda3d_ROOT_posix = (install_path / "panda3d").posix()
+    panda3d_ROOT_posix = (install_path / "panda3d").as_posix()
 
     if args.target == __TARGET_LIST[1]:
         return
