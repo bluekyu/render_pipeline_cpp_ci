@@ -165,6 +165,17 @@ def main(args):
     if args.target == __TARGET_LIST[2]:
         did_build = True
 
+    did_build = build_project(
+        git_url="https://github.com/bluekyu/render_pipeline_cpp.git",
+        branch="master",
+        cmake_generator=args.cmake_generator,
+        install_path=install_path,
+        cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON"
+                    "-Dpanda3d_ROOT={}".format((install_path / "panda3d").as_posix()),
+                    "-Dyaml-cpp_DIR={}".format((install_path / "yaml-cpp" / "CMake").as_posix()),
+                    "-DFlatBuffers_ROOT={}".format((install_path / "flatbuffers").as_posix())],
+        ignore_cache=did_build)
+
     if args.target == __TARGET_LIST[2]:
         return
 
