@@ -33,7 +33,8 @@ import project_utils
 BOOST_ROOT = ""
 
 # internal variables
-__TARGET_LIST = ["panda3d-thirdparty", "panda3d", "render_pipeline_cpp", "rpcpp_plugins", "all"]
+__TARGET_LIST = ["panda3d-thirdparty", "panda3d", "render_pipeline_cpp", "rpcpp_plugins",
+                 "rpcpp_samples", "all"]
 
 
 def print_debug(msg):
@@ -133,6 +134,8 @@ def main(args):
         if lib_path.stem not in import_libs:
             os.remove(lib_path.as_posix())
 
+    panda3d_ROOT_posix = (install_path / "panda3d").posix()
+
     if args.target == __TARGET_LIST[1]:
         return
 
@@ -171,7 +174,7 @@ def main(args):
         install_path=install_path,
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
                     "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
-                    "-Dpanda3d_ROOT:PATH={}".format((install_path / "panda3d").as_posix()),
+                    "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
                     "-Dyaml-cpp_DIR:PATH={}".format((install_path / "yaml-cpp" / "CMake").as_posix()),
                     "-DFlatBuffers_ROOT:PATH={}".format((install_path / "flatbuffers").as_posix())],
         ignore_cache=did_build)
@@ -180,18 +183,40 @@ def main(args):
         return
 
     # rpcpp_plugins
+    if args.target == __TARGET_LIST[3]:
+        did_build = True
+
     did_build = build_project(
-        git_url="https://github.com/bluekyu/rpcpp_plugins",
+        git_url="https://github.com/bluekyu/rpcpp_plugins.git",
         branch="master",
         cmake_generator=args.cmake_generator,
         install_path=install_path,
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
                     "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
-                    "-Dpanda3d_ROOT:PATH={}".format((install_path / "panda3d").as_posix()),
+                    "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
                     "-Drpcpp_plugins_BUILD_background2d:BOOL=ON"],
         ignore_cache=did_build)
 
     if args.target == __TARGET_LIST[3]:
+        return
+
+    # rpcpp_samples
+    if args.target == __TARGET_LIST[4]:
+        did_build = True
+
+    did_build = build_project(
+        git_url="https://github.com/bluekyu/rpcpp_samples.git",
+        branch="master",
+        cmake_generator=args.cmake_generator,
+        install_path=install_path,
+        cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
+                    "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
+                    "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
+                    "-Drpcpp_samples_BUILD_panda3d_samples:BOOL=ON",
+                    "-Drpcpp_samples_BUILD_render_pipeline_samples:BOOL=ON"],
+        ignore_cache=did_build)
+
+    if args.target == __TARGET_LIST[4]:
         return
 
 
