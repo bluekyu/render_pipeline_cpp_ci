@@ -90,7 +90,7 @@ def main(args):
 
     # debug cache diretory
     if install_path.exists():
-        print_debug("-- Listring install directory")
+        print_debug("-- listing install directory")
         for cache_files in install_path.iterdir():
             print_debug(str(cache_files))
 
@@ -139,7 +139,7 @@ def main(args):
     # YAML-CPP
     did_build = build_project(
         git_url="https://github.com/jbeder/yaml-cpp.git",
-        branch="yaml-cpp-0.5.3",
+        branch="master",
         cmake_generator=args.cmake_generator,
         install_path=install_path,
         cmake_args=["-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else ""],
