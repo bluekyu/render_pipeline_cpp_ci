@@ -35,6 +35,11 @@ BOOST_ROOT = ""
 # internal variables
 __TARGET_LIST = ["panda3d-thirdparty", "panda3d", "render_pipeline_cpp", "rpcpp_plugins",
                  "rpcpp_samples", "all"]
+__target = None
+__install_path = None
+__cache_path = None
+__artifacts_path = None
+__cmake_generator = None
 
 
 def print_debug(msg):
@@ -45,133 +50,136 @@ def print_error(msg):
     print("\x1b[31;1m", msg, "\x1b[0m", sep="", flush=True)
 
 
-def build_project(git_url, cmake_generator, install_path, branch="master", cmake_args=[], ignore_cache=False):
+def build_project(target, git_url, branch="master", ignore_cache=False, artifacts_url=None,
+                  install_prefix=None, cmake_args=[]):
     print_debug("-" * 79)
     print_debug("Project: {}".format(git_url))
 
-    install_path = pathlib.Path(install_path).absolute()
-
     git_repo = project_utils.GitProject(git_url, branch)
-    git_repo.set_hash_file_path(install_path / (git_repo.name + ".hash"))
-
-    if not ignore_cache:
-        repo_cache_hash = git_repo.get_cache_hash()
-        repo_hash = git_repo.get_hash() if git_repo.exists() else git_repo.get_remote_hash()
-
-        if repo_hash == repo_cache_hash:
-            print_debug("-- cache is up to date")
+    if (__target != target) and not ignore_cache:
+        if artifacts_url:
+            print_debug("-- get latest build")
+            # __install_path
             return False
-        else:
-            print_debug("-- repository was updated to {} from {}".format(repo_hash, repo_cache_hash))
 
-    git_repo.remove_hash_file()
+        if __cache_path:
+            git_repo.set_hash_file_path(__cache_path / (git_repo.name + ".hash"))
+
+            repo_cache_hash = git_repo.get_cache_hash()
+            repo_hash = git_repo.get_hash() if git_repo.exists() else git_repo.get_remote_hash()
+
+            if repo_hash == repo_cache_hash:
+                print_debug("-- cache is up to date")
+                return False
+            else:
+                print_debug("-- repository was updated to {} from {}".format(repo_hash, repo_cache_hash))
+
+            git_repo.remove_hash_file()
 
     if not git_repo.exists():
         print_debug("-- setup git")
         git_repo.clone()
 
+    # setup cmake
     print_debug("-- setup cmake")
-    project = project_utils.CMakeProject(git_repo.name, install_prefix=(install_path / git_repo.name))
+    if not install_prefix:
+        install_prefix = __install_path / git_repo.name
+
+    project = project_utils.CMakeProject(target, install_prefix=install_prefix.absolute())
     project.remove_install()
 
     print_debug("---- source directory: {}".format(project.source_dir))
     print_debug("---- binary directory: {}".format(project.binary_dir))
-    project.generate(cmake_generator, cmake_args)
+    project.generate(__cmake_generator, cmake_args)
     project.install()
 
-    if git_repo.create_hash_file():
-        print_debug("-- hash file is created")
-    else:
-        print_error("-- Failed to create hash file")
+    if __target == target:
+        project.install_prefix = __artifacts_path
+        project.generate(__cmake_generator)
+        project.install()
+        print_debug("-- artifacts are created")
+    elif __cache_path:
+        if git_repo.create_hash_file():
+            print_debug("-- hash file is created")
+        else:
+            print_error("-- Failed to create hash file")
     return True
 
 
 def main(args):
-    install_path = pathlib.Path(args.install_prefix).absolute()
-
     # debug cache diretory
-    if install_path.exists():
-        print_debug("-- listing install directory")
-        for cache_files in install_path.iterdir():
+    if __cache_path and __cache_path.exists():
+        print_debug("-- listing cache directory")
+        for cache_files in __cache_path.iterdir():
             print_debug(str(cache_files))
 
     did_build = False
 
     # panda3d-thirdparty ######################################################
-    if args.target == __TARGET_LIST[1]:
+    if __target == __TARGET_LIST[0]:
         did_build = True
 
     did_build = build_project(
+        target=__TARGET_LIST[0],
         git_url="https://github.com/bluekyu/panda3d-thirdparty.git",
         branch="develop",
-        install_path=install_path,
-        cmake_generator=args.cmake_generator,
-        cmake_args=["-Dbuild_minimal:BOOL=ON"],
-        ignore_cache=did_build)
+        ignore_cache=did_build,
+        artifacts_url="https://ci.appveyor.com/api/projects/bluekyu/panda3d-thirdparty/artifacts/panda3d-thirdparty.zip?branch=develop",
+        cmake_args=["-Dbuild_minimal:BOOL=ON"])
 
-    os.environ["MAKEPANDA_THIRDPARTY"] = (install_path / "panda3d-thirdparty").as_posix()
+    os.environ["MAKEPANDA_THIRDPARTY"] = (__install_path / "panda3d-thirdparty").as_posix()
 
-    if not args.all and (args.target == __TARGET_LIST[0]):
+    if not args.all and (__target == __TARGET_LIST[0]):
         return
 
     # panda3d #################################################################
-    if args.target == __TARGET_LIST[1]:
+    if __target == __TARGET_LIST[1]:
         did_build = True
 
     did_build = build_project(
         git_url="https://github.com/bluekyu/panda3d.git",
         branch="develop",
-        cmake_generator=args.cmake_generator,
-        install_path=install_path,
-        cmake_args=["-Dpanda3d_build_minimal:BOOL=ON"],
-        ignore_cache=did_build)
+        ignore_cache=did_build,
+        cmake_args=["-Dpanda3d_build_minimal:BOOL=ON"])
 
     # reduce the size of cache
-    for pdb_path in (install_path / "panda3d" / "bin").glob("*.pdb"):
+    for pdb_path in (__install_path / "panda3d" / "bin").glob("*.pdb"):
         os.remove(pdb_path.as_posix())
-    import_libs = [f.stem for f in (install_path / "panda3d" / "lib").glob("*.exp")]
-    for lib_path in (install_path / "panda3d" / "lib").glob("*.lib"):
+    import_libs = [f.stem for f in (__install_path / "panda3d" / "lib").glob("*.exp")]
+    for lib_path in (__install_path / "panda3d" / "lib").glob("*.lib"):
         if lib_path.stem not in import_libs:
             os.remove(lib_path.as_posix())
 
-    panda3d_ROOT_posix = (install_path / "panda3d").as_posix()
+    panda3d_ROOT_posix = (__install_path / "panda3d").as_posix()
 
-    if not args.all and (args.target == __TARGET_LIST[1]):
+    if not args.all and (__target == __TARGET_LIST[1]):
         return
 
     # YAML-CPP ################################################################
     did_build = build_project(
         git_url="https://github.com/jbeder/yaml-cpp.git",
         branch="master",
-        cmake_generator=args.cmake_generator,
-        install_path=install_path,
         ignore_cache=False) or did_build
 
     # spdlog ##################################################################
     did_build = build_project(
         git_url="https://github.com/gabime/spdlog.git",
         branch="v0.13.0",
-        cmake_generator=args.cmake_generator,
-        install_path=install_path,
         ignore_cache=False) or did_build
 
     # flatbuffers #############################################################
     did_build = build_project(
         git_url="https://github.com/google/flatbuffers.git",
         branch="v1.7.1",
-        cmake_generator=args.cmake_generator,
-        install_path=install_path,
         ignore_cache=False) or did_build
 
     # render_pipeline_cpp #####################################################
-    if not args.all and (args.target == __TARGET_LIST[2]):
+    if not args.all and (__target == __TARGET_LIST[2]):
         did_build = True
 
     did_build = build_project(
         git_url="https://github.com/bluekyu/render_pipeline_cpp.git",
         branch="master",
-        cmake_generator=args.cmake_generator,
-        install_path=install_path,
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
                     "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
                     "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
@@ -179,36 +187,32 @@ def main(args):
                     "-DFlatBuffers_ROOT:PATH={}".format((install_path / "flatbuffers").as_posix())],
         ignore_cache=did_build)
 
-    if not args.all and (args.target == __TARGET_LIST[2]):
+    if not args.all and (__target == __TARGET_LIST[2]):
         return
 
     # rpcpp_plugins ###########################################################
-    if args.target == __TARGET_LIST[3]:
+    if __target == __TARGET_LIST[3]:
         did_build = True
 
     did_build = build_project(
         git_url="https://github.com/bluekyu/rpcpp_plugins.git",
         branch="master",
-        cmake_generator=args.cmake_generator,
-        install_path=install_path,
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
                     "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
                     "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
                     "-Drpcpp_plugins_BUILD_background2d:BOOL=ON"],
         ignore_cache=did_build)
 
-    if not args.all and (args.target == __TARGET_LIST[3]):
+    if not args.all and (__target == __TARGET_LIST[3]):
         return
 
     # rpcpp_samples ###########################################################
-    if args.target == __TARGET_LIST[4]:
+    if __target == __TARGET_LIST[4]:
         did_build = True
 
     did_build = build_project(
         git_url="https://github.com/bluekyu/rpcpp_samples.git",
         branch="master",
-        cmake_generator=args.cmake_generator,
-        install_path=install_path,
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
                     "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
                     "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
@@ -216,7 +220,7 @@ def main(args):
                     "-Drpcpp_samples_BUILD_render_pipeline_samples:BOOL=ON"],
         ignore_cache=did_build)
 
-    if not args.all and (args.target == __TARGET_LIST[4]):
+    if not args.all and (__target == __TARGET_LIST[4]):
         return
 
 
@@ -226,9 +230,19 @@ if __name__ == "__main__":
                         "and build until the TARGET if '--all' option does not set")
     parser.add_argument("--cmake-generator", type=str, required=True, help="Set cmake generator. "
                         "ex) \"Visual Studio 15 2017 Win64\"")
-    parser.add_argument("--install-prefix", type=str, required=True, help="Set path used for cmake install prefix")
+    parser.add_argument("--install-prefix", type=str, required=True, help="Set directory path used for cmake install prefix")
+    parser.add_argument("--cache-prefix", type=str, help="Set directory path used for cache")
     parser.add_argument("--all", action="store_true", help="Build including targets after given 'TARGET'")
+    parser.add_argument("--artifacts-prefix", type=str, help="Generate artifacts directory for the 'TARGET'")
     args = parser.parse_args()
+
+    __target = args.target
+    __install_path = pathlib.Path(args.install_prefix).absolute()
+    if __cache_path:
+        __cache_path = pathlib.Path(args.cache_prefix).absolute()
+    if args.artifacts_prefix:
+        __artifacts_path = pathlib.Path(args.artifacts_prefix).absolute()
+    __cmake_generator = args.cmake_generator
 
     main(args)
 

@@ -110,7 +110,15 @@ class CMakeProject:
         source_dir = pathlib.Path(source_dir).absolute()
         self.source_dir = source_dir.as_posix()
         self.binary_dir = (pathlib.Path(binary_dir).absolute() / source_dir.name).as_posix()
-        self.install_prefix = pathlib.Path(install_prefix).absolute().as_posix()
+        self.install_prefix = install_prefix
+
+    @property
+    def install_prefix(self):
+        return self._install_prefix
+
+    @install_prefix.setter
+    def install_prefix(self, path):
+        self._install_prefix = pathlib.Path(path).absolute().as_posix
 
     def generate(self, cmake_generator, additional_args=[]):
         binary_dir_path = pathlib.Path(self.binary_dir)
