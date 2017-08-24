@@ -238,7 +238,7 @@ if __name__ == "__main__":
 
     __target = args.target
     __install_path = pathlib.Path(args.install_prefix).absolute()
-    if __cache_path:
+    if args.cache_prefix:
         __cache_path = pathlib.Path(args.cache_prefix).absolute()
     if args.artifacts_prefix:
         __artifacts_path = pathlib.Path(args.artifacts_prefix).absolute()
@@ -246,7 +246,6 @@ if __name__ == "__main__":
 
     main(args)
 
-    # cache size
     def scan_directory_size(directory):
         total_size = 0
         with os.scandir(directory) as it:
@@ -257,5 +256,10 @@ if __name__ == "__main__":
                     total_size += os.path.getsize(f.path)
         return total_size
 
-    print_debug("Cache size: {:.3f} MiB".format(
-        scan_directory_size(pathlib.Path(args.install_prefix)) / 1024 / 1024))
+    # artifacts size
+    if __artifacts_path:
+        print_debug("Artifacts size: {:.3f} MiB".format(scan_directory_size(__artifacts_path) / 1024 / 1024))
+
+    # cache size
+    if __cache_path:
+        print_debug("Cache size: {:.3f} MiB".format(scan_directory_size(__cache_path) / 1024 / 1024))
