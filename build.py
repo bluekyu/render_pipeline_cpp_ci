@@ -257,9 +257,9 @@ if __name__ == "__main__":
         return total_size
 
     # artifacts size
-    if __artifacts_path:
+    if __artifacts_path and __artifacts_path.exists():
         print_debug("Artifacts size: {:.3f} MiB".format(scan_directory_size(__artifacts_path) / 1024 / 1024))
 
     # cache size
-    if __cache_path:
+    if __cache_path and __cache_path.exists():
         print_debug("Cache size: {:.3f} MiB".format(scan_directory_size(__cache_path) / 1024 / 1024))
