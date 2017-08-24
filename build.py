@@ -97,7 +97,7 @@ def main(args):
 
     did_build = False
 
-    # panda3d-thirdparty
+    # panda3d-thirdparty ######################################################
     if args.target == __TARGET_LIST[1]:
         did_build = True
 
@@ -111,10 +111,10 @@ def main(args):
 
     os.environ["MAKEPANDA_THIRDPARTY"] = (install_path / "panda3d-thirdparty").as_posix()
 
-    if args.target == __TARGET_LIST[0]:
+    if not args.all and (args.target == __TARGET_LIST[0]):
         return
 
-    # panda3d
+    # panda3d #################################################################
     if args.target == __TARGET_LIST[1]:
         did_build = True
 
@@ -136,10 +136,10 @@ def main(args):
 
     panda3d_ROOT_posix = (install_path / "panda3d").as_posix()
 
-    if args.target == __TARGET_LIST[1]:
+    if not args.all and (args.target == __TARGET_LIST[1]):
         return
 
-    # YAML-CPP
+    # YAML-CPP ################################################################
     did_build = build_project(
         git_url="https://github.com/jbeder/yaml-cpp.git",
         branch="master",
@@ -147,7 +147,7 @@ def main(args):
         install_path=install_path,
         ignore_cache=False) or did_build
 
-    # spdlog
+    # spdlog ##################################################################
     did_build = build_project(
         git_url="https://github.com/gabime/spdlog.git",
         branch="v0.13.0",
@@ -155,7 +155,7 @@ def main(args):
         install_path=install_path,
         ignore_cache=False) or did_build
 
-    # flatbuffers
+    # flatbuffers #############################################################
     did_build = build_project(
         git_url="https://github.com/google/flatbuffers.git",
         branch="v1.7.1",
@@ -163,8 +163,8 @@ def main(args):
         install_path=install_path,
         ignore_cache=False) or did_build
 
-    # render_pipeline_cpp
-    if args.target == __TARGET_LIST[2]:
+    # render_pipeline_cpp #####################################################
+    if not args.all and (args.target == __TARGET_LIST[2]):
         did_build = True
 
     did_build = build_project(
@@ -179,10 +179,10 @@ def main(args):
                     "-DFlatBuffers_ROOT:PATH={}".format((install_path / "flatbuffers").as_posix())],
         ignore_cache=did_build)
 
-    if args.target == __TARGET_LIST[2]:
+    if not args.all and (args.target == __TARGET_LIST[2]):
         return
 
-    # rpcpp_plugins
+    # rpcpp_plugins ###########################################################
     if args.target == __TARGET_LIST[3]:
         did_build = True
 
@@ -197,10 +197,10 @@ def main(args):
                     "-Drpcpp_plugins_BUILD_background2d:BOOL=ON"],
         ignore_cache=did_build)
 
-    if args.target == __TARGET_LIST[3]:
+    if not args.all and (args.target == __TARGET_LIST[3]):
         return
 
-    # rpcpp_samples
+    # rpcpp_samples ###########################################################
     if args.target == __TARGET_LIST[4]:
         did_build = True
 
@@ -216,15 +216,18 @@ def main(args):
                     "-Drpcpp_samples_BUILD_render_pipeline_samples:BOOL=ON"],
         ignore_cache=did_build)
 
-    if args.target == __TARGET_LIST[4]:
+    if not args.all and (args.target == __TARGET_LIST[4]):
         return
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("target", choices=__TARGET_LIST, type=str)
-    parser.add_argument("--cmake-generator", type=str, required=True)
-    parser.add_argument("--install-prefix", type=str, required=True)
+    parser.add_argument("target", choices=__TARGET_LIST, type=str, help="Set a 'TARGET' to rebuild always "
+                        "and build until the TARGET if '--all' option does not set")
+    parser.add_argument("--cmake-generator", type=str, required=True, help="Set cmake generator. "
+                        "ex) \"Visual Studio 15 2017 Win64\"")
+    parser.add_argument("--install-prefix", type=str, required=True, help="Set path used for cmake install prefix")
+    parser.add_argument("--all", type=bool, default=False, help="Build including targets after given 'TARGET'")
     args = parser.parse_args()
 
     main(args)

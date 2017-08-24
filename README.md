@@ -2,7 +2,7 @@
 
 [![Windows build status](https://ci.appveyor.com/api/projects/status/efs56usknquscufm/branch/master?svg=true)](https://ci.appveyor.com/project/bluekyu/render-pipeline-cpp-ci/branch/master)
 
-This project is for continuous integration to build
+This project is for continuous integration of
 [Render Pipeline C++](https://github.com/bluekyu/render_pipeline_cpp) project.
 
 
