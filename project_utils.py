@@ -155,15 +155,14 @@ def download_and_extract_archive(url, dest_path=None):
     response = urllib.request.urlopen(url)
     if not response:
         return False
-    tmp_file_name = pathlib.Path(str(uuid.uuid4()) + ".zip").absolute()
-    tmp_file = open(tmp_file_name, "wb")
-    tmp_file.write(response.read())
-    tmp_file.close()
+    tmp_file_path = pathlib.Path(str(uuid.uuid4()) + ".zip").absolute()
+    with tmp_file_path.open("wb") as tmp_file:
+        tmp_file.write(response.read())
 
     if not dest_path:
         dest_path = pathlib.Path.cwd()
-    dest_path = pathlib.Path(dest_path).absolute()
+    dest_path = pathlib.Path(dest_path).absolute().as_posix()
 
-    zipfile.ZipFile(tmp_file_name).extractall(dest_path)
+    zipfile.ZipFile(tmp_file_path.as_posix()).extractall(dest_path)
 
-    os.remove(tmp_file_name)
+    os.remove(tmp_file_path)
