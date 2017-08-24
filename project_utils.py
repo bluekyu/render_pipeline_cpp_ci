@@ -118,7 +118,7 @@ class CMakeProject:
 
     @install_prefix.setter
     def install_prefix(self, path):
-        self._install_prefix = pathlib.Path(path).absolute().as_posix
+        self._install_prefix = pathlib.Path(path).absolute().as_posix()
 
     def generate(self, cmake_generator, additional_args=[]):
         binary_dir_path = pathlib.Path(self.binary_dir)

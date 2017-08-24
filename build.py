@@ -183,8 +183,8 @@ def main(args):
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
                     "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
                     "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
-                    "-Dyaml-cpp_DIR:PATH={}".format((install_path / "yaml-cpp" / "CMake").as_posix()),
-                    "-DFlatBuffers_ROOT:PATH={}".format((install_path / "flatbuffers").as_posix())],
+                    "-Dyaml-cpp_DIR:PATH={}".format((__install_path / "yaml-cpp" / "CMake").as_posix()),
+                    "-DFlatBuffers_ROOT:PATH={}".format((__install_path / "flatbuffers").as_posix())],
         ignore_cache=did_build)
 
     if not args.all and (__target == __TARGET_LIST[2]):
@@ -232,8 +232,8 @@ if __name__ == "__main__":
                         "ex) \"Visual Studio 15 2017 Win64\"")
     parser.add_argument("--install-prefix", type=str, required=True, help="Set directory path used for cmake install prefix")
     parser.add_argument("--cache-prefix", type=str, help="Set directory path used for cache")
-    parser.add_argument("--all", action="store_true", help="Build including targets after given 'TARGET'")
     parser.add_argument("--artifacts-prefix", type=str, help="Generate artifacts directory for the 'TARGET'")
+    parser.add_argument("--all", action="store_true", help="Build including targets after given 'TARGET'")
     args = parser.parse_args()
 
     __target = args.target
