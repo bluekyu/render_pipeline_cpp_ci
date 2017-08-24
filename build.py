@@ -227,7 +227,7 @@ if __name__ == "__main__":
     parser.add_argument("--cmake-generator", type=str, required=True, help="Set cmake generator. "
                         "ex) \"Visual Studio 15 2017 Win64\"")
     parser.add_argument("--install-prefix", type=str, required=True, help="Set path used for cmake install prefix")
-    parser.add_argument("--all", action="store_false", help="Build including targets after given 'TARGET'")
+    parser.add_argument("--all", action="store_true", help="Build including targets after given 'TARGET'")
     args = parser.parse_args()
 
     main(args)
