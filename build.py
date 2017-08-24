@@ -67,10 +67,10 @@ def build_project(git_url, cmake_generator, install_path, branch="master", cmake
     git_repo.remove_hash_file()
 
     if not git_repo.exists():
-        print_debug("-- start git")
+        print_debug("-- setup git")
         git_repo.clone()
 
-    print_debug("-- start cmake")
+    print_debug("-- setup cmake")
     project = project_utils.CMakeProject(git_repo.name, install_prefix=(install_path / git_repo.name))
     project.remove_install()
 
