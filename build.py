@@ -141,6 +141,7 @@ def main(args):
         git_url="https://github.com/bluekyu/panda3d.git",
         branch="develop",
         ignore_cache=did_build,
+        artifacts_url="https://ci.appveyor.com/api/projects/bluekyu/panda3d/artifacts/panda3d.zip?branch=develop",
         cmake_args=["-Dpanda3d_build_minimal:BOOL=ON"])
 
     # reduce the size of cache
@@ -185,12 +186,13 @@ def main(args):
         __TARGET_LIST[2],
         git_url="https://github.com/bluekyu/render_pipeline_cpp.git",
         branch="master",
+        ignore_cache=did_build,
+        artifacts_url="https://ci.appveyor.com/api/projects/bluekyu/render_pipeline_cpp/artifacts/render_pipeline_cpp.zip?branch=master",
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
                     "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
                     "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
                     "-Dyaml-cpp_DIR:PATH={}".format((__install_path / "yaml-cpp" / "CMake").as_posix()),
-                    "-DFlatBuffers_ROOT:PATH={}".format((__install_path / "flatbuffers").as_posix())],
-        ignore_cache=did_build)
+                    "-DFlatBuffers_ROOT:PATH={}".format((__install_path / "flatbuffers").as_posix())])
 
     if not args.all and (__target == __TARGET_LIST[2]):
         return
@@ -203,11 +205,12 @@ def main(args):
         __TARGET_LIST[3],
         git_url="https://github.com/bluekyu/rpcpp_plugins.git",
         branch="master",
+        ignore_cache=did_build,
+        artifacts_url="https://ci.appveyor.com/api/projects/bluekyu/rpcpp_plugins/artifacts/rpcpp_plugins.zip?branch=master",
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
                     "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
                     "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
-                    "-Drpcpp_plugins_BUILD_background2d:BOOL=ON"],
-        ignore_cache=did_build)
+                    "-Drpcpp_plugins_BUILD_background2d:BOOL=ON"])
 
     if not args.all and (__target == __TARGET_LIST[3]):
         return
@@ -220,12 +223,13 @@ def main(args):
         __TARGET_LIST[4],
         git_url="https://github.com/bluekyu/rpcpp_samples.git",
         branch="master",
+        ignore_cache=did_build,
+        artifacts_url="https://ci.appveyor.com/api/projects/bluekyu/rpcpp_samples/artifacts/rpcpp_samples.zip?branch=master",
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
                     "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
                     "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
                     "-Drpcpp_samples_BUILD_panda3d_samples:BOOL=ON",
-                    "-Drpcpp_samples_BUILD_render_pipeline_samples:BOOL=ON"],
-        ignore_cache=did_build)
+                    "-Drpcpp_samples_BUILD_render_pipeline_samples:BOOL=ON"])
 
     if not args.all and (__target == __TARGET_LIST[4]):
         return
