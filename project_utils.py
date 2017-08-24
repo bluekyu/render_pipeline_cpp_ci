@@ -28,6 +28,9 @@ import re
 import pathlib
 import shutil
 import os
+import urllib.request
+import uuid
+import zipfile
 
 
 class GitProject:
@@ -80,7 +83,7 @@ class GitProject:
 
     def remove_hash_file(self):
         if self.hash_file_path.exists():
-            os.remove(self.hash_file_path.as_posix())
+            os.remove(self.hash_file_path)
 
     def get_cache_hash(self):
         if self.hash_file_path.exists():
@@ -146,3 +149,21 @@ class CMakeProject:
     def remove_install(self):
         if pathlib.Path(self.install_prefix).exists():
             shutil.rmtree(self.install_prefix)
+
+
+def download_and_extract_archive(url, dest_path=None):
+    response = urllib.request.urlopen(url)
+    if not response:
+        return False
+    tmp_file_name = pathlib.Path(str(uuid.uuid4()) + ".zip").absolute()
+    tmp_file = open(tmp_file_name, "wb")
+    tmp_file.write(response.read())
+    tmp_file.close()
+
+    if not dest_path:
+        dest_path = pathlib.Path.cwd()
+    dest_path = pathlib.Path(dest_path).absolute()
+
+    zipfile.ZipFile(tmp_file_name).extractall(dest_path)
+
+    os.remove(tmp_file_name)

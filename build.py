@@ -59,7 +59,7 @@ def build_project(target, git_url, branch="master", ignore_cache=False, artifact
     if (__target != target) and not ignore_cache:
         if artifacts_url:
             print_debug("-- get latest build")
-            # __install_path
+            project_utils.download_and_extract_archive(artifacts_url, __install_path / target)
             return False
 
         if __cache_path:
@@ -137,6 +137,7 @@ def main(args):
         did_build = True
 
     did_build = build_project(
+        target=__TARGET_LIST[1],
         git_url="https://github.com/bluekyu/panda3d.git",
         branch="develop",
         ignore_cache=did_build,
@@ -157,18 +158,21 @@ def main(args):
 
     # YAML-CPP ################################################################
     did_build = build_project(
+        "yaml-cpp",
         git_url="https://github.com/jbeder/yaml-cpp.git",
         branch="master",
         ignore_cache=False) or did_build
 
     # spdlog ##################################################################
     did_build = build_project(
+        "spdlog",
         git_url="https://github.com/gabime/spdlog.git",
         branch="v0.13.0",
         ignore_cache=False) or did_build
 
     # flatbuffers #############################################################
     did_build = build_project(
+        "flatbuffers",
         git_url="https://github.com/google/flatbuffers.git",
         branch="v1.7.1",
         ignore_cache=False) or did_build
@@ -178,6 +182,7 @@ def main(args):
         did_build = True
 
     did_build = build_project(
+        __TARGET_LIST[2],
         git_url="https://github.com/bluekyu/render_pipeline_cpp.git",
         branch="master",
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
@@ -195,6 +200,7 @@ def main(args):
         did_build = True
 
     did_build = build_project(
+        __TARGET_LIST[3],
         git_url="https://github.com/bluekyu/rpcpp_plugins.git",
         branch="master",
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
@@ -211,6 +217,7 @@ def main(args):
         did_build = True
 
     did_build = build_project(
+        __TARGET_LIST[4],
         git_url="https://github.com/bluekyu/rpcpp_samples.git",
         branch="master",
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
