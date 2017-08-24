@@ -46,4 +46,4 @@ platform: x64
 # to run your custom scripts instead of automatic MSBuild
 build_script:
 - cmd: >-
-    python build.py panda3d --cmake-generator "Visual Studio 15 2017 Win64" --install-prefix="C:/projects/_install"
+    python build.py all --cmake-generator "Visual Studio 15 2017 Win64" --install-prefix="C:/projects/_install"
