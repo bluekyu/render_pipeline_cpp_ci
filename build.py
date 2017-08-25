@@ -163,7 +163,7 @@ def main(args):
         git_url="https://github.com/jbeder/yaml-cpp.git",
         branch="master",
         ignore_cache=False,
-        install_prefix=__cache_path) or did_build
+        install_prefix=__cache_path / "yaml-cpp") or did_build
 
     # spdlog ##################################################################
     did_build = build_project(
@@ -171,7 +171,7 @@ def main(args):
         git_url="https://github.com/gabime/spdlog.git",
         branch="v0.13.0",
         ignore_cache=False,
-        install_prefix=__cache_path) or did_build
+        install_prefix=__cache_path / "spdlog") or did_build
 
     # flatbuffers #############################################################
     did_build = build_project(
@@ -179,7 +179,7 @@ def main(args):
         git_url="https://github.com/google/flatbuffers.git",
         branch="v1.7.1",
         ignore_cache=False,
-        install_prefix=__cache_path) or did_build
+        install_prefix=__cache_path / "flatbuffers") or did_build
 
     # render_pipeline_cpp #####################################################
     if not args.all and (__target == __TARGET_LIST[2]):
