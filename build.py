@@ -58,7 +58,7 @@ def build_project(target, git_url, branch="master", ignore_cache=False, artifact
     git_repo = project_utils.GitProject(git_url, branch)
     if (__target != target) and not ignore_cache:
         if artifacts_url:
-            print_debug("-- get latest build")
+            print_debug("-- get latest build from: {}".format(artifacts_url))
             project_utils.download_and_extract_archive(artifacts_url, __install_path / target)
             return False
 
@@ -162,21 +162,24 @@ def main(args):
         "yaml-cpp",
         git_url="https://github.com/jbeder/yaml-cpp.git",
         branch="master",
-        ignore_cache=False) or did_build
+        ignore_cache=False,
+        install_prefix=__cache_path) or did_build
 
     # spdlog ##################################################################
     did_build = build_project(
         "spdlog",
         git_url="https://github.com/gabime/spdlog.git",
         branch="v0.13.0",
-        ignore_cache=False) or did_build
+        ignore_cache=False,
+        install_prefix=__cache_path) or did_build
 
     # flatbuffers #############################################################
     did_build = build_project(
         "flatbuffers",
         git_url="https://github.com/google/flatbuffers.git",
         branch="v1.7.1",
-        ignore_cache=False) or did_build
+        ignore_cache=False,
+        install_prefix=__cache_path) or did_build
 
     # render_pipeline_cpp #####################################################
     if not args.all and (__target == __TARGET_LIST[2]):
@@ -191,8 +194,8 @@ def main(args):
         cmake_args=["-DBoost_USE_STATIC_LIBS:BOOL=ON",
                     "-DBOOST_ROOT:PATH={}".format(BOOST_ROOT) if BOOST_ROOT else "",
                     "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
-                    "-Dyaml-cpp_DIR:PATH={}".format((__install_path / "yaml-cpp" / "CMake").as_posix()),
-                    "-DFlatBuffers_ROOT:PATH={}".format((__install_path / "flatbuffers").as_posix())])
+                    "-Dyaml-cpp_DIR:PATH={}".format((__cache_path / "yaml-cpp" / "CMake").as_posix()),
+                    "-DFlatBuffers_ROOT:PATH={}".format((__cache_path / "flatbuffers").as_posix())])
 
     if not args.all and (__target == __TARGET_LIST[2]):
         return
