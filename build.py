@@ -102,7 +102,7 @@ def build_project(target, git_url, branch="master", ignore_cache=False, artifact
         if git_repo.create_hash_file():
             print_debug("-- hash file is created")
         else:
-            print_error("-- Failed to create hash file")
+            print_error("-- failed to create hash file")
     return True
 
 
@@ -129,7 +129,7 @@ def main(args):
 
     os.environ["MAKEPANDA_THIRDPARTY"] = (__install_path / "panda3d-thirdparty").as_posix()
 
-    if not args.all and (__target == __TARGET_LIST[0]):
+    if __target == __TARGET_LIST[0]:
         return
 
     # panda3d #################################################################
@@ -154,7 +154,7 @@ def main(args):
 
     panda3d_ROOT_posix = (__install_path / "panda3d").as_posix()
 
-    if not args.all and (__target == __TARGET_LIST[1]):
+    if __target == __TARGET_LIST[1]:
         return
 
     # YAML-CPP ################################################################
@@ -182,7 +182,7 @@ def main(args):
         install_prefix=__cache_path / "flatbuffers") or did_build
 
     # render_pipeline_cpp #####################################################
-    if not args.all and (__target == __TARGET_LIST[2]):
+    if __target == __TARGET_LIST[2]:
         did_build = True
 
     did_build = build_project(
@@ -197,7 +197,7 @@ def main(args):
                     "-Dyaml-cpp_DIR:PATH={}".format((__cache_path / "yaml-cpp" / "CMake").as_posix()),
                     "-DFlatBuffers_ROOT:PATH={}".format((__cache_path / "flatbuffers").as_posix())])
 
-    if not args.all and (__target == __TARGET_LIST[2]):
+    if __target == __TARGET_LIST[2]:
         return
 
     # rpcpp_plugins ###########################################################
@@ -215,7 +215,7 @@ def main(args):
                     "-Dpanda3d_ROOT:PATH={}".format(panda3d_ROOT_posix),
                     "-Drpcpp_plugins_BUILD_background2d:BOOL=ON"])
 
-    if not args.all and (__target == __TARGET_LIST[3]):
+    if __target == __TARGET_LIST[3]:
         return
 
     # rpcpp_samples ###########################################################
@@ -234,7 +234,7 @@ def main(args):
                     "-Drpcpp_samples_BUILD_panda3d_samples:BOOL=ON",
                     "-Drpcpp_samples_BUILD_render_pipeline_samples:BOOL=ON"])
 
-    if not args.all and (__target == __TARGET_LIST[4]):
+    if __target == __TARGET_LIST[4]:
         return
 
 
@@ -247,7 +247,6 @@ if __name__ == "__main__":
     parser.add_argument("--install-prefix", type=str, required=True, help="Set directory path used for cmake install prefix")
     parser.add_argument("--cache-prefix", type=str, help="Set directory path used for cache")
     parser.add_argument("--artifacts-prefix", type=str, help="Generate artifacts directory for the 'TARGET'")
-    parser.add_argument("--all", action="store_true", help="Build including targets after given 'TARGET'")
     args = parser.parse_args()
 
     __target = args.target
