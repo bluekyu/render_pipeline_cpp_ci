@@ -23,14 +23,24 @@ SOFTWARE.
 """
 
 
+import pathlib
+import argparse
+import os
+import shlex
 import subprocess
 import re
-import pathlib
 import shutil
-import os
 import urllib.request
 import uuid
 import zipfile
+
+
+def print_debug(msg):
+    print("\x1b[32;1m", msg, "\x1b[0m", sep="", flush=True)
+
+
+def print_error(msg):
+    print("\x1b[31;1m", msg, "\x1b[0m", sep="", flush=True)
 
 
 class GitProject:
@@ -91,10 +101,13 @@ class GitProject:
                 return hash_file.readline().strip()
         return None
 
-    def clone(self, point=None):
+    def clone(self, point=None, depth=None):
         if not point:
             point = self.branch
-        subprocess.run([self.git_cmd, "clone", "--branch", point, self.url], check=True)
+        cmd = [self.git_cmd, "clone", "--branch", point, self.url]
+        if depth:
+            cmd += ["--depth", str(depth)]
+        subprocess.run(cmd, check=True)
 
     def exists(self, strict=False):
         if (pathlib.Path(self.name) / ".git").exists():
@@ -166,3 +179,74 @@ def download_and_extract_archive(url, dest_path=None):
     zipfile.ZipFile(tmp_file_path.as_posix()).extractall(dest_path)
 
     os.remove(tmp_file_path)
+
+
+def main(args):
+    install_prefix = pathlib.Path(args.install_prefix).absolute()
+    hash_path = None
+    if args.hash_path:
+        hash_path = pathlib.Path(args.hash_path).absolute()
+
+    print_debug("-" * 79)
+    print_debug("Project: {}".format(args.git_url))
+
+    git_repo = GitProject(args.git_url, args.branch)
+    if hash_path:
+        git_repo.set_hash_file_path(hash_path)
+
+        repo_cache_hash = git_repo.get_cache_hash()
+        repo_hash = git_repo.get_hash() if git_repo.exists() else git_repo.get_remote_hash()
+
+        if repo_hash == repo_cache_hash:
+            print_debug("-- cache is up to date")
+            return
+        else:
+            print_debug("-- repository was updated to {} from {}".format(repo_hash, repo_cache_hash))
+
+    if not git_repo.exists():
+        print_debug("-- setup git")
+        git_repo.clone(depth=1)
+
+    # setup cmake
+    print_debug("-- setup cmake")
+
+    project = CMakeProject(git_repo.name, install_prefix=install_prefix)
+    project.remove_install()
+
+    print_debug("---- source directory: {}".format(project.source_dir))
+    print_debug("---- binary directory: {}".format(project.binary_dir))
+    project.generate(args.cmake_generator, shlex.split(args.cmake_args) if args.cmake_args else [])
+    project.install()
+
+    if hash_path:
+        if git_repo.create_hash_file():
+            print_debug("-- hash file is created")
+        else:
+            print_error("-- failed to create hash file")
+
+    def scan_directory_size(directory):
+        total_size = 0
+        with os.scandir(directory) as it:
+            for f in it:
+                if f.is_dir():
+                    total_size += scan_directory_size(f.path)
+                elif f.is_file():
+                    total_size += os.path.getsize(f.path)
+        return total_size
+
+    # cache size
+    if hash_path and hash_path.exists():
+        print_debug("Cache size: {:.3f} MiB".format(scan_directory_size(install_prefix) / 1024 / 1024))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("git_url", type=str, help="Git URL of target project.")
+    parser.add_argument("--branch", type=str, default="master", help="Branch of target project.")
+    parser.add_argument("--cmake-generator", type=str, required=True, help="Set cmake generator. "
+                        "ex) \"Visual Studio 15 2017 Win64\"")
+    parser.add_argument("--install-prefix", type=str, required=True, help="Set directory path used for cmake install prefix")
+    parser.add_argument("--cmake-args", type=str, help="Set extra arguments in CMake.")
+    parser.add_argument("--hash-path", type=str, help="Set path of hash file")
+
+    main(parser.parse_args())
