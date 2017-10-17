@@ -46,10 +46,34 @@ def print_error(msg):
 class GitProject:
     git_cmd = "git"
 
-    def __init__(self, url, branch="master"):
+    def __init__(self, url, branch="master", commit=None):
         self.url = url
-        self.branch = branch
+        if commit:
+            self.commit = commit
+        elif branch:
+            self.branch = branch
+        else:
+            self.branch = "master"
+
         self.name = re.search("^.*/(.*?)\.git$", self.url).group(1)
+
+    @property
+    def branch(self):
+        return self._branch
+
+    @branch.setter
+    def branch(self, branch):
+        self._branch = branch
+        self._commit = None
+
+    @property
+    def commit(self):
+        return self._commit
+
+    @commit.setter
+    def commit(self, commit):
+        self._branch = None
+        self._commit = commit
 
     def set_hash_file_path(self, hash_file_path):
         self.hash_file_path = pathlib.Path(hash_file_path)
@@ -83,7 +107,7 @@ class GitProject:
     def get_hash(self, point="HEAD"):
         self.exists(True)
         return subprocess.run([self.git_cmd, "rev-parse", point],
-                              stdout=subprocess.PIPE, cwd=self.name, check=True).stdout.decode()
+                              stdout=subprocess.PIPE, cwd=pathlib.Path(self.name), check=True).stdout.decode()
 
     def create_hash_file(self):
         with self.hash_file_path.open("w") as hash_file:
@@ -101,13 +125,24 @@ class GitProject:
                 return hash_file.readline().strip()
         return None
 
-    def clone(self, point=None, depth=None):
-        if not point:
-            point = self.branch
-        cmd = [self.git_cmd, "clone", "--branch", point, self.url]
-        if depth:
-            cmd += ["--depth", str(depth)]
+    def clone(self, depth=None):
+        cmd = [self.git_cmd, "clone"]
+        if self.branch:
+            cmd += ["--branch", self.branch]
+            if depth:
+                cmd += ["--depth", str(depth)]
+            subprocess.run(cmd, check=True)
+        elif self.commit:
+            cmd += ["--no-checkout"]
+
+        cmd += [self.url]
         subprocess.run(cmd, check=True)
+
+        if self.commit:
+            self.checkout(self.commit)
+
+    def checkout(self, point=None):
+        subprocess.run([self.git_cmd, "checkout", point], cwd=pathlib.Path(self.name), check=True)
 
     def exists(self, strict=False):
         if (pathlib.Path(self.name) / ".git").exists():
@@ -120,12 +155,12 @@ class GitProject:
 class CMakeProject:
     cmake_cmd = "cmake"
 
-    def __init__(self, source_dir, install_prefix, config="Release", binary_dir="_build"):
+    def __init__(self, source_dir, install_prefix, config="Release", binary_dir="build"):
         self.config = config
 
         source_dir = pathlib.Path(source_dir).absolute()
         self.source_dir = source_dir.as_posix()
-        self.binary_dir = (pathlib.Path(binary_dir).absolute() / source_dir.name).as_posix()
+        self.binary_dir = (source_dir / binary_dir).as_posix()
         self.install_prefix = install_prefix
 
     @property
@@ -190,7 +225,7 @@ def main(args):
     print_debug("-" * 79)
     print_debug("Project: {}".format(args.git_url))
 
-    git_repo = GitProject(args.git_url, args.branch)
+    git_repo = GitProject(args.git_url, branch=args.branch, commit=args.commit)
     if hash_path:
         git_repo.set_hash_file_path(hash_path)
 
@@ -242,7 +277,11 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("git_url", type=str, help="Git URL of target project.")
-    parser.add_argument("--branch", type=str, default="master", help="Branch of target project.")
+
+    git_tag_group = parser.add_mutually_exclusive_group()
+    git_tag_group.add_argument("--branch", type=str, default="master", help="Branch of target project.")
+    git_tag_group.add_argument("--commit", type=str, help="Commit of target project.")
+
     parser.add_argument("--cmake-generator", type=str, required=True, help="Set cmake generator. "
                         "ex) \"Visual Studio 15 2017 Win64\"")
     parser.add_argument("--install-prefix", type=str, required=True, help="Set directory path used for cmake install prefix")
