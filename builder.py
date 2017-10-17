@@ -75,8 +75,13 @@ class GitProject:
         self._branch = None
         self._commit = commit
 
-    def set_hash_file_path(self, hash_file_path):
-        self.hash_file_path = pathlib.Path(hash_file_path)
+    @property
+    def hash_file_path(self):
+        return self._hash_file_path
+
+    @hash_file_path.setter
+    def hash_file_path(self, hash_file_path):
+        self._hash_file_path = pathlib.Path(hash_file_path)
 
     def ls_remote(self):
         result = subprocess.run([self.git_cmd, "ls-remote", "--heads", "--tags", self.url],
@@ -119,11 +124,26 @@ class GitProject:
         if self.hash_file_path.exists():
             os.remove(self.hash_file_path)
 
-    def get_cache_hash(self):
+    def read_cache_hash(self):
         if self.hash_file_path.exists():
             with self.hash_file_path.open() as hash_file:
                 return hash_file.readline().strip()
         return None
+
+    def is_cached(self):
+        cache_hash = self.read_cache_hash()
+        if not cache_hash:
+            return False
+
+        if self.commit:
+            if self.commit == cache_hash[:len(self.commit)]:
+                return True
+            return False
+
+        repo_hash = self.get_hash() if self.exists() else self.get_remote_hash()
+        if repo_hash == cache_hash:
+            return True
+        return False
 
     def clone(self, depth=None):
         cmd = [self.git_cmd, "clone"]
@@ -227,16 +247,11 @@ def main(args):
 
     git_repo = GitProject(args.git_url, branch=args.branch, commit=args.commit)
     if hash_path:
-        git_repo.set_hash_file_path(hash_path)
-
-        repo_cache_hash = git_repo.get_cache_hash()
-        repo_hash = git_repo.get_hash() if git_repo.exists() else git_repo.get_remote_hash()
-
-        if repo_hash == repo_cache_hash:
+        git_repo.hash_file_path = hash_path
+        if git_repo.is_cached():
             print_debug("-- cache is up to date")
             return
-        else:
-            print_debug("-- repository was updated to {} from {}".format(repo_hash, repo_cache_hash))
+        print_debug("-- cache is invalid")
 
     if not git_repo.exists():
         print_debug("-- setup git")
