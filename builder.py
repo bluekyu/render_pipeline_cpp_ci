@@ -112,7 +112,7 @@ class GitProject:
     def get_hash(self, point="HEAD"):
         self.exists(True)
         return subprocess.run([self.git_cmd, "rev-parse", point],
-                              stdout=subprocess.PIPE, cwd=pathlib.Path(self.name), check=True).stdout.decode()
+                              stdout=subprocess.PIPE, cwd=pathlib.Path(self.name).as_posix(), check=True).stdout.decode()
 
     def create_hash_file(self):
         with self.hash_file_path.open("w") as hash_file:
@@ -161,7 +161,7 @@ class GitProject:
             self.checkout(self.commit)
 
     def checkout(self, point=None):
-        subprocess.run([self.git_cmd, "checkout", point], cwd=pathlib.Path(self.name), check=True)
+        subprocess.run([self.git_cmd, "checkout", point], cwd=pathlib.Path(self.name).as_posix(), check=True)
 
     def exists(self, strict=False):
         if (pathlib.Path(self.name) / ".git").exists():
