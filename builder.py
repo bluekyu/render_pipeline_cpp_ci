@@ -151,12 +151,11 @@ class GitProject:
             cmd += ["--branch", self.branch]
             if depth:
                 cmd += ["--depth", str(depth)]
+            cmd += [self.url]
             subprocess.run(cmd, check=True)
         elif self.commit:
-            cmd += ["--no-checkout"]
-
-        cmd += [self.url]
-        subprocess.run(cmd, check=True)
+            cmd += ["--no-checkout", self.url]
+            subprocess.run(cmd, check=True)
 
         if self.commit:
             self.checkout(self.commit)
