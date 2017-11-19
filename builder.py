@@ -174,7 +174,7 @@ class GitProject:
 class CMakeProject:
     cmake_cmd = "cmake"
 
-    def __init__(self, source_dir, install_prefix, config="Release", binary_dir="build"):
+    def __init__(self, source_dir, install_prefix, config, binary_dir="build"):
         self.config = config
 
         source_dir = pathlib.Path(source_dir).absolute()
@@ -259,7 +259,7 @@ def main(args):
     # setup cmake
     print_debug("-- setup cmake")
 
-    project = CMakeProject(git_repo.name, install_prefix=install_prefix)
+    project = CMakeProject(git_repo.name, install_prefix, args.config)
     project.remove_install()
 
     print_debug("---- source directory: {}".format(project.source_dir))
@@ -296,6 +296,7 @@ if __name__ == "__main__":
     git_tag_group.add_argument("--branch", type=str, default="master", help="Branch of target project.")
     git_tag_group.add_argument("--commit", type=str, help="Commit of target project.")
 
+    parser.add_argument("--config", type=str, default="Release", help="Set cmake configuration.")
     parser.add_argument("--cmake-generator", type=str, required=True, help="Set cmake generator. "
                         "ex) \"Visual Studio 15 2017 Win64\"")
     parser.add_argument("--install-prefix", type=str, required=True, help="Set directory path used for cmake install prefix")
